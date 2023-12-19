@@ -1,0 +1,136 @@
+const express = require("express");
+const routerLibros = express.Router();
+const Joi = require('joi');
+
+const libros = require("../elementos/data");
+const libroSchema = Joi.object({
+    titulo: Joi.string().required().label('Título'),
+    autor: Joi.string().required().label('Autor'),
+    });
+
+
+routerLibros.get("/", (req, res) => {
+//logica para obtener todos los libros 
+try{  
+     res.json(libros);
+}
+catch(err){
+    next(err);
+}
+})
+
+
+
+routerLibros.get("/:id", (req, res, next) => {
+   // logica mostrar un libro en especifico segun id
+  
+   try {
+    const id = req.params.id;
+    const libro = libros.find((l) => l.id === id);
+    if (!libro) {
+    const error = new Error('Libro no encontrado');
+    error.status = 404;
+    throw error;
+    }
+    res.json(libro);
+    } catch (err) {
+    next(err);
+    }
+
+  
+})
+
+routerLibros.post("/", (req, res, next) => {
+    // logica crear un libro
+    try{
+    const {error, value} = libroSchema.validate(req.body); 
+
+    if(error){
+        const validationError  = new Error("Error de validacion");
+        validationError.status = 404;
+        validationError.details = error.details.map(detail => detail.message);
+        throw validationError;
+    }
+
+    const {titulo, autor} = value;
+
+    const newbook = {
+        id : libros.length + 1,
+        titulo, 
+        autor,
+    };
+
+        libros.push(newbook);
+        res.status(200).json(newbook);
+    } catch(err){
+        next(err);
+    }
+    
+})
+
+routerLibros.put("/:id", (req, res, next) => {
+    // logica actualizar la info de un libro en especifico segun id
+    try{
+        const {error, value} = libroSchema.validate(req.body);
+        if(error){
+            const validationError  = new Error("Error de validacion");
+            validationError.status = 404;
+            validationError.details = error.details.map(detail => detail.message);
+            throw validationError;
+        }
+
+    const id = req.params.id;
+
+    const libro = libros.find((l) => l.id === id);
+
+    if(!libro){
+        const error = new Error('Libro no encontrado');
+        error.status = 404;
+        throw error;
+    }
+
+    const {titulo, autor} = value;
+
+       libro.titulo = titulo || libro.titulo;
+       libro.autor = autor || libro.autor;
+
+       res.json(libro);
+
+      }catch(err){
+        next(err);
+      }
+    
+
+ })
+
+ routerLibros.delete("/:id", (req, res, next) => {
+    // logica eliminar un libro en especifico segun id
+    try{
+
+        // extraigo id de los parametros de la request
+        const id = req.params.id;
+        //busco el indice del libro que coindida con el de la request
+        const index = libros.findIndex((l) => l.id === id);
+
+        //corroboro si hubo alguna coincidencia, si hubo que haya error
+        if(index === -1){
+            const error = new Error("Libro no encontrado");
+            error.status = 404;
+            throw error;
+        }
+        
+        //dentro del array de libros en la posicion del indice
+        let libroEliminado = libros.splice(index, 1);
+        
+        res.json(libroEliminado[0]);
+
+    } catch(err){
+        next(err);
+    }
+ })
+
+
+
+
+
+ module.exports = routerLibros;
