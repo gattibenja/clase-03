@@ -45,15 +45,15 @@ routerLibros.post("/", (req, res, next) => {
     try{
     const {error, value} = libroSchema.validate(req.body); 
 
+    
     if(error){
         const validationError  = new Error("Error de validacion");
         validationError.status = 404;
         validationError.details = error.details.map(detail => detail.message);
         throw validationError;
     }
-
     const {titulo, autor} = value;
-
+    
     const newbook = {
         id : libros.length + 1,
         titulo, 
@@ -74,7 +74,7 @@ routerLibros.put("/:id", (req, res, next) => {
         const {error, value} = libroSchema.validate(req.body);
         if(error){
             const validationError  = new Error("Error de validacion");
-            validationError.status = 404;
+            validationError.status = 401;
             validationError.details = error.details.map(detail => detail.message);
             throw validationError;
         }
